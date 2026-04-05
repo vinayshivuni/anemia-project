@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anemia Detection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Splash Screen */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        .splash-box {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .splash-box h1 {
+            color: #1e3c72;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .robot-img {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+        }
+
+        /* Main App - Initially Hidden */
+        .main-app {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .app-title {
+            text-align: center;
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .search-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .option-select {
+            width: 80%;
+            max-width: 400px;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+
+        .upload-area {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+
+        .upload-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .results {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results h3 {
+            color: #333;
+            margin-bottom: 15px;
+            margin-top: 20px;
+        }
+
+        .result-positive {
+            color: #dc3545;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .result-negative {
+            color: #28a745;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .download-btn {
+            background: #28a745;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .preview-img {
+            max-width: 300px;
+            margin: 20px auto;
+            display: block;
+            border-radius: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: #667eea;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .status-online {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-offline {
+            background: #dc3545;
+            color: white;
+        }
+
+        .backend-status {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Splash Screen -->
+<div class="splash-screen" id="splashScreen">
+    <div class="splash-box">
+        <h1>🩸 Anemia Detection System</h1>
+        <div class="robot-img">
+            🤖🩺
+        </div>
+        <p style="color: #666; margin-top: 20px;">Loading Medical AI...</p>
+    </div>
+</div>
+
+<!-- Main Application -->
+<div class="main-app" id="mainApp">
+    <div class="app-title">
+        <h1>🩸 Anemia Detection System</h1>
+        <p>AI-Powered Medical Assistant</p>
+        <div class="backend-status" id="backendStatus">
+            <span class="status-badge status-offline" id="statusBadge">● Backend: Checking...</span>
+        </div>
+    </div>
+
+    <div class="search-container">
+        <select class="option-select" id="inputType">
+            <option value="report">📄 Option A: Blood Report (OCR)</option>
+            <option value="eye">👁️ Option B: Eye/Nail Image Analysis</option>
+        </select>
+    </div>
+
+    <div class="upload-area">
+        <h3>Upload Medical Image</h3>
+        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+        <button class="upload-btn" onclick="document.getElementById('imageInput').click()">📸 Choose Image</button>
+        <button class="upload-btn" id="analyzeBtn" disabled>🔬 Analyze</button>
+        <div id="preview"></div>
+    </div>
+
+    <div class="results" id="results">
+        <h3>📊 Analysis Results</h3>
+        <div id="resultText"></div>
+        <div id="precautions"></div>
+        <div id="medicalSuggestions"></div>
+        <div id="foodSuggestions"></div>
+        <button class="download-btn" id="downloadBtn">📥 Download Report (TXT)</button>
+    </div>
+</div>
+
+<script>
+    // Check backend status on load
+    async function checkBackend() {
+        const statusBadge = document.getElementById('statusBadge');
+        try {
+            const response = await fetch('http://localhost:5000/health');
+            if (response.ok) {
+                statusBadge.innerHTML = '● Backend: Online ✅';
+                statusBadge.className = 'status-badge status-online';
+                return true;
+            }
+        } catch (error) {
+            console.log('Backend not running:', error);
+        }
+        statusBadge.innerHTML = '● Backend: Offline ⚠️ (Using Simulation)';
+        statusBadge.className = 'status-badge status-offline';
+        return false;
+    }
+
+    // Splash screen auto-hide after 2 seconds
+    setTimeout(() => {
+        document.getElementById('splashScreen').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('splashScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            checkBackend();
+        }, 500);
+    }, 2000);
+
+    let currentImage = null;
+    let currentResults = null;
+    let isBackendAvailable = false;
+
+    // Image preview
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                currentImage = event.target.result;
+                const preview = document.getElementById('preview');
+                preview.innerHTML = `<img src="${currentImage}" class="preview-img" alt="Preview">`;
+                document.getElementById('analyzeBtn').disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Analyze button
+    document.getElementById('analyzeBtn').addEventListener('click', async function() {
+        const inputType = document.getElementById('inputType').value;
+        
+        if (!currentImage) {
+            alert('Please upload an image first');
+            return;
+        }
+
+        document.getElementById('analyzeBtn').textContent = '🔍 Analyzing...';
+        document.getElementById('analyzeBtn').disabled = true;
+
+        // Check backend first
+        isBackendAvailable = await checkBackend();
+
+        if (inputType === 'report') {
+            await analyzeBloodReport();
+        } else {
+            await analyzeEyeImage();
+        }
+        
+        document.getElementById('analyzeBtn').textContent = '🔬 Analyze';
+        document.getElementById('analyzeBtn').disabled = false;
+    });
+
+    async function analyzeBloodReport() {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.style.display = 'block';
+        document.getElementById('resultText').innerHTML = '<div class="loading">🔄 Analyzing blood report with AI... Please wait</div>';
+        document.getElementById('precautions').innerHTML = '';
+        document.getElementById('medicalSuggestions').innerHTML = '';
+        document.getElementById('foodSuggestions').innerHTML = '';
+        
+        if (isBackendAvailable) {
+            try {
+                const response = await fetch('http://localhost:5000/analyze-report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: currentImage })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentResults = {
+                        condition: data.isAnemic ? "⚠️ ANEMIA DETECTED" : "✅ NO ANEMIA DETECTED",
+                        detail: data.isAnemic ? "Anemia Detected" : "No Anemia Detected",
+                        hbValue: data.hb_value,
+                        isAnemic: data.isAnemic,
+                        method: data.method,
+                        precautions: data.isAnemic ? [
+                            "🩺 Get regular blood tests every 3 months",
+                            "💊 Take iron supplements as prescribed by doctor",
+                            "🥩 Increase iron-rich foods in your diet",
+                            "🚫 Avoid drinking tea or coffee with meals (reduces iron absorption)",
+                            "🩸 Monitor for unusual bleeding or fatigue",
+                            "😴 Get adequate sleep (7-8 hours)",
+                            "💧 Stay hydrated throughout the day"
+                        ] : [
+                            "✅ Continue healthy diet with iron-rich foods",
+                            "✅ Regular checkups recommended every 6 months",
+                            "✅ Maintain active lifestyle"
+                        ],
+                        medicalSuggestions: data.isAnemic ? [
+                            "🏥 Consult a hematologist for proper diagnosis",
+                            "📊 Complete blood count (CBC) test recommended every 3 months",
+                            "🔬 Check ferritin and vitamin B12 levels",
+                            "💊 Discuss iron supplementation dosage with doctor",
+                            "📝 Keep a symptom diary (fatigue, dizziness, cold hands/feet)"
+                        ] : [
+                            "🏥 Maintain current health routine",
+                            "📋 Annual checkup is sufficient",
+                            "🩸 Get CBC test once a year"
+                        ],
+                        foodSuggestions: data.isAnemic ? [
+                            "🥩 Heme Iron Sources (Best Absorption): Red meat, liver, poultry, fish",
+                            "🥬 Non-Heme Iron Sources: Spinach, kale, broccoli, Swiss chard",
+                            "🥜 Legumes: Lentils, chickpeas, beans, tofu",
+                            "🍊 Vitamin C (Enhances absorption 6x): Oranges, lemons, bell peppers, tomatoes",
+                            "🌾 Fortified Foods: Cereals, quinoa, whole grains",
+                            "🥚 Eggs (especially the yolk)",
+                            "🌰 Nuts & Seeds: Pumpkin seeds, cashews, almonds",
+                            "⚠️ Avoid: Tea, coffee, calcium supplements with meals (blocks iron)"
+                        ] : [
+                            "🍎 Continue balanced diet with variety of nutrients",
+                            "🥬 Include dark leafy greens weekly",
+                            "🍊 Pair iron-rich foods with vitamin C for better absorption"
+                        ]
+                    };
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('Backend error:', error);
+                useSimulation('report');
+            }
+        } else {
+            useSimulation('report');
+        }
+        
+        displayResults();
+    }
+
+    async function analyzeEyeImage() {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.style.display = 'block';
+        document.getElementById('resultText').innerHTML = '<div class="loading">🔄 Analyzing eye image for paleness... Please wait</div>';
+        document.getElementById('precautions').innerHTML = '';
+        document.getElementById('medicalSuggestions').innerHTML = '';
+        document.getElementById('foodSuggestions').innerHTML = '';
+        
+        if (isBackendAvailable) {
+            try {
+                const response = await fetch('http://localhost:5000/analyze-eye', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: currentImage })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentResults = {
+                        condition: data.isAnemic ? "⚠️ ANEMIA SUSPECTED" : "✅ NO ANEMIA SIGNS",
+                        detail: data.isAnemic ? "Pale Conjunctiva Detected" : "Normal Conjunctiva",
+                        isAnemic: data.isAnemic,
+                        confidence: data.confidence,
+                        redness_score: data.redness_score,
+                        method: data.method,
+                        precautions: data.isAnemic ? [
+                            "🩺 Schedule a blood test immediately for confirmation",
+                            "💊 Consult physician for proper iron supplementation",
+                            "👁️ Monitor lower eyelid color daily (should be pink/red)",
+                            "🥩 Increase dietary iron intake significantly",
+                            "🩸 Watch for symptoms: fatigue, dizziness, cold hands/feet",
+                            "😴 Take rest and avoid strenuous activities",
+                            "📊 Keep track of your energy levels"
+                        ] : [
+                            "✅ Continue regular eye checkups",
+                            "✅ Maintain healthy lifestyle with balanced diet",
+                            "✅ Annual health screening recommended",
+                            "👁️ Check eyelid color monthly as self-monitoring"
+                        ],
+                        medicalSuggestions: data.isAnemic ? [
+                            "🏥 Complete blood count (CBC) test required for confirmation",
+                            "📊 Check hemoglobin and hematocrit levels",
+                            "🔍 Evaluate for underlying causes (nutritional deficiency, chronic disease)",
+                            "👨‍⚕️ Follow up with a general physician within 2 weeks",
+                            "💊 Do not start supplements without blood test confirmation"
+                        ] : [
+                            "🏥 Routine annual checkup is sufficient",
+                            "🥗 Continue balanced nutrition with iron-rich foods",
+                            "📅 Schedule next checkup in 6-12 months"
+                        ],
+                        foodSuggestions: data.isAnemic ? [
+                            "🥩 Top Iron Sources: Beef liver (6.5mg/3oz), chicken (1.3mg/3oz), fish (0.5mg/3oz)",
+                            "🥬 Plant Power: Spinach (6.4mg/cup cooked), lentils (6.6mg/cup), tofu (6.6mg/cup)",
+                            "🍊 Vitamin C Boosters (Eat with iron): Oranges, strawberries, bell peppers, broccoli",
+                            "🥣 Breakfast: Fortified cereals (18mg/serving), oatmeal",
+                            "🥜 Snacks: Pumpkin seeds (4.2mg/oz), cashews, dried apricots",
+                            "🍫 Dark chocolate (70%+ cocoa) - 3.4mg/oz",
+                            "⚠️ Avoid taking calcium supplements or antacids with iron-rich meals"
+                        ] : [
+                            "🥗 Continue your healthy eating habits",
+                            "🍎 Include variety of colorful fruits and vegetables",
+                            "💪 Maintain good nutrition for overall health"
+                        ]
+                    };
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                console.error('Backend error:', error);
+                useSimulation('eye');
+            }
+        } else {
+            useSimulation('eye');
+        }
+        
+        displayResults();
+    }
+
+    function useSimulation(type) {
+        if (type === 'report') {
+            const mockHbValue = (Math.random() * 5 + 8).toFixed(1);
+            const isAnemic = parseFloat(mockHbValue) < 12;
+            currentResults = {
+                condition: isAnemic ? "⚠️ ANEMIA DETECTED" : "✅ NO ANEMIA DETECTED",
+                detail: isAnemic ? "Anemia Detected (Simulation Mode)" : "No Anemia Detected (Simulation Mode)",
+                hbValue: mockHbValue,
+                isAnemic: isAnemic,
+                method: "Simulation (Backend offline)",
+                precautions: isAnemic ? [
+                    "⚠️ Backend server is not running",
+                    "📡 Run 'python backend.py' in VS Code terminal",
+                    "💡 Using simulated results for demonstration",
+                    "🩺 Real analysis requires backend connection"
+                ] : [
+                    "📡 Backend server not connected",
+                    "💡 Results are simulated for demo"
+                ],
+                medicalSuggestions: [
+                    "🔧 To enable real AI analysis:",
+                    "1. Open terminal in VS Code (Ctrl+J)",
+                    "2. Run: pip install flask flask-cors pillow pytesseract opencv-python",
+                    "3. Run: python backend.py",
+                    "4. Refresh this page"
+                ],
+                foodSuggestions: [
+                    "📋 This is a simulation mode result",
+                    "🔄 Once backend is running, real analysis will work",
+                    "📸 Try uploading a real blood report or eye image after starting backend"
+                ]
+            };
+        } else {
+            const isAnemic = Math.random() < 0.5;
+            currentResults = {
+                condition: isAnemic ? "⚠️ ANEMIA SUSPECTED" : "✅ NO ANEMIA SIGNS",
+                detail: isAnemic ? "Anemia Suspected (Simulation Mode)" : "Normal (Simulation Mode)",
+                isAnemic: isAnemic,
+                method: "Simulation (Backend offline)",
+                precautions: [
+                    "⚠️ Backend server is not running",
+                    "📡 Run 'python backend.py' in VS Code terminal",
+                    "💡 Using simulated results for demonstration"
+                ],
+                medicalSuggestions: [
+                    "🔧 To enable real AI analysis:",
+                    "1. Open terminal in VS Code (Ctrl+J)",
+                    "2. Run: pip install flask flask-cors pillow pytesseract opencv-python",
+                    "3. Run: python backend.py",
+                    "4. Refresh this page"
+                ],
+                foodSuggestions: [
+                    "📋 This is a simulation mode result",
+                    "🔄 Once backend is running, real eye color analysis will work",
+                    "👁️ Real analysis checks conjunctiva paleness using computer vision"
+                ]
+            };
+        }
+    }
+
+    function displayResults() {
+        let extraInfo = '';
+        if (currentResults.hbValue) {
+            extraInfo = `<p><strong>📊 Hemoglobin Value:</strong> ${currentResults.hbValue} g/dL <br>
+            <small>(Normal range: 12-16 g/dL for women, 13-18 g/dL for men)</small></p>`;
+        }
+        if (currentResults.confidence) {
+            extraInfo = `<p><strong>🎯 AI Confidence:</strong> ${currentResults.confidence}%<br>
+            <small>Based on conjunctiva color analysis</small></p>`;
+        }
+        if (currentResults.redness_score) {
+            extraInfo += `<p><strong>🎨 Redness Score:</strong> ${currentResults.redness_score}<br>
+            <small>Lower score indicates more pallor (anemia sign)</small></p>`;
+        }
+        if (currentResults.method) {
+            extraInfo += `<p><strong>🔬 Analysis Method:</strong> ${currentResults.method}</p>`;
+        }
+        
+        document.getElementById('resultText').innerHTML = `
+            <div class="${currentResults.isAnemic ? 'result-positive' : 'result-negative'}">${currentResults.condition}</div>
+            <p style="font-size: 1.1rem; margin: 10px 0;">${currentResults.detail}</p>
+            ${extraInfo}
+        `;
+        
+        document.getElementById('precautions').innerHTML = `<h3>🛡️ Precautions & Recommendations</h3><ul>${currentResults.precautions.map(p => `<li>${p}</li>`).join('')}</ul>`;
+        document.getElementById('medicalSuggestions').innerHTML = `<h3>🏥 Medical Suggestions</h3><ul>${currentResults.medicalSuggestions.map(m => `<li>${m}</li>`).join('')}</ul>`;
+        document.getElementById('foodSuggestions').innerHTML = `<h3>🍎 Dietary Recommendations</h3><ul>${currentResults.foodSuggestions.map(f => `<li>${f}</li>`).join('')}</ul>`;
+    }
+
+    // Download report
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+        if (!currentResults) {
+            alert('No results to download. Please upload and analyze an image first.');
+            return;
+        }
+        
+        let report = `╔══════════════════════════════════════════════════════════════╗\n`;
+        report += `║           ANEMIA DETECTION SYSTEM - MEDICAL REPORT           ║\n`;
+        report += `╚══════════════════════════════════════════════════════════════╝\n\n`;
+        report += `📅 Report Generated: ${new Date().toLocaleString()}\n`;
+        report += `🔬 Analysis Method: ${currentResults.method || 'AI Analysis'}\n`;
+        report += `${'='.repeat(60)}\n\n`;
+        report += `📊 DIAGNOSIS RESULT:\n`;
+        report += `   ${currentResults.condition}\n`;
+        report += `   ${currentResults.detail}\n\n`;
+        
+        if (currentResults.hbValue) {
+            report += `📈 LAB VALUES:\n`;
+            report += `   Hemoglobin: ${currentResults.hbValue} g/dL\n`;
+            report += `   Reference Range: 12.0 - 16.0 g/dL\n\n`;
+        }
+        
+        if (currentResults.confidence) {
+            report += `🎯 AI CONFIDENCE: ${currentResults.confidence}%\n\n`;
+        }
+        
+        report += `${'='.repeat(60)}\n\n`;
+        report += `🛡️ PRECAUTIONS & RECOMMENDATIONS:\n`;
+        currentResults.precautions.forEach((p, i) => {
+            report += `   ${i+1}. ${p}\n`;
+        });
+        
+        report += `\n🏥 MEDICAL SUGGESTIONS:\n`;
+        currentResults.medicalSuggestions.forEach((m, i) => {
+            report += `   ${i+1}. ${m}\n`;
+        });
+        
+        report += `\n🍎 DIETARY RECOMMENDATIONS:\n`;
+        currentResults.foodSuggestions.forEach((f, i) => {
+            report += `   ${i+1}. ${f}\n`;
+        });
+        
+        report += `\n${'='.repeat(60)}\n`;
+        report += `⚠️ MEDICAL DISCLAIMER:\n`;
+        report += `   This is an AI-assisted analysis tool. Results are for informational\n`;
+        report += `   purposes only. Always consult a qualified healthcare provider for\n`;
+        report += `   medical diagnosis and treatment decisions.\n`;
+        report += `${'='.repeat(60)}\n`;
+        
+        const blob = new Blob([report], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `anemia_report_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.txt`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    });
+
+    // Check backend every 30 seconds
+    setInterval(checkBackend, 30000);
+</script>
+
+</body>
+</html>
