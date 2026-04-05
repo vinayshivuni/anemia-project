@@ -252,7 +252,7 @@
     async function checkBackend() {
         const statusBadge = document.getElementById('statusBadge');
         try {
-            const response = await fetch('http://localhost:5000/health');
+            const response = await fetch('http://anemia-project.onrender.com/health');
             if (response.ok) {
                 statusBadge.innerHTML = '● Backend: Online ✅';
                 statusBadge.className = 'status-badge status-online';
@@ -330,7 +330,7 @@
         
         if (isBackendAvailable) {
             try {
-                const response = await fetch('http://localhost:5000/analyze-report', {
+                const response = await fetch('http://anemia-project.onrender.com/analyze-report', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: currentImage })
@@ -408,7 +408,7 @@
         
         if (isBackendAvailable) {
             try {
-                const response = await fetch('http://localhost:5000/analyze-eye', {
+                const response = await fetch('http://anemia-project.onrender.com/analyze-eye', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: currentImage })
