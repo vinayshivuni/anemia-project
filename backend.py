@@ -9,7 +9,7 @@ import cv2
 import sys
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Try to import OCR, show warning if not available
 try:
