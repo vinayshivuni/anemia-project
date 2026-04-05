@@ -273,6 +273,7 @@
             document.getElementById('splashScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             checkBackend();
+            setTimeout(checkBackend, 3000);
         }, 500);
     }, 2000);
 
